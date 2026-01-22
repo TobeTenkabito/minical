@@ -23,6 +23,7 @@ isn't there a certain fun in building something from scratch, bit by bit?
 - Expression simplification
 - Numerical derivative validation via finite differences
 - Supports nested and composite expressions
+- Simple matrix algebra operations and numerical calculations
 
 ---
 
