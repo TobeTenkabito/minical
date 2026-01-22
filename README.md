@@ -73,6 +73,36 @@ validate(expr, d3x, ["x", "x", "x"], point, tol=1e-3)
 Note: numerical validation of high-order derivatives is sensitive to step size and floating-point error.
 Tolerance can be adjusted by the user.
 
+### matrix calculus
+```python
+from minical.matrix import Var, exp, sin, cos, pow, Inverse, eval_expr,ln
+
+A = Var("A", (2,2))
+B = Var("B", (2,2))
+env = { "A": [[1, 2],[3, 4]],"B": [[1, 2],[2, 4]] }
+expr1 = pow(A, 2)
+print("pow(A,2) =", eval_expr(expr1, env))
+expr2 = exp(A)
+print("exp(A) =", eval_expr(expr2, env))
+expr3 = sin(A)
+expr4 = cos(A)
+print("sin(A) =", eval_expr(expr3, env))
+print("cos(A) =", eval_expr(expr4, env))
+expr5 = Inverse(B)
+print("Inverse(B) =", eval_expr(expr5, env))
+expr6 = exp(A) @ Inverse(A)
+print("exp(A) * inv(A) =", eval_expr(expr6, env))
+```
+### the output would be
+```python
+pow(A,2) = [[7, 10], [15, 22]]
+exp(A) = [[51.96890355105711, 74.73648783689403], [112.10473175534102, 164.0736353063982]]
+sin(A) = [[-0.46559101168184286, -0.14843834244287693], [-0.2226575136643153, -0.688248525346158]]
+cos(A) = [[1.8554231650779978, -0.11087638101074773], [-0.166314571516122, 1.6891085935618741]]
+Inverse(B) = (B^-1)
+exp(A) * inv(A) = [[8.166924653226829, 14.600659632610096], [21.900989448915254, 30.067914102141927]]
+```
+
 ## Design Philosophy
 #### Minimalism over completeness
 Only core calculus primitives are implemented.
@@ -95,5 +125,11 @@ minical/
 │   ├── latex.py      # LaTeX parser
 │   ├── validate.py   # Numerical derivative validation
 │   └── __init__.py
+├──matrix/
+│   ├── calculus.py
+│   ├── core.py
+│   ├── funcs.py
+│   ├── ops.py
+│   ├── simplify.py
+│   └── __init__.py
 ```
-
