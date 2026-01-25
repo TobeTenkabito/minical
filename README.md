@@ -1,136 +1,262 @@
-# MiniCal
+# statistiques
 
-**MiniCal** is a minimal symbolic calculus engine written in pure Python.  
-It focuses on **symbolic differentiation**, **LaTeX expression parsing**, and **numerical validation**, with an emphasis on clarity, extensibility, and mathematical correctness.
+`statistiques` is the probability, statistics, and stochastic systems submodule of **minical**.
 
-Unlike full-featured CAS systems, MiniCal is designed to be **small, inspectable, and hackable**, making it suitable for experimentation, learning, and research-oriented extensions.
+It provides a lightweight, dependency-free framework for:
 
----
-## Reason
-If you've read this far, you might be wondering why I wrote this code. 
-The answer is actually quite simple: bored people always want to find something interesting to do. 
-Although the tools for finding derivatives are now very sophisticated, 
-isn't there a certain fun in building something from scratch, bit by bit?
+- Symbolic random variables
+- Probability distributions
+- Monte Carlo sampling
+- Statistical operators
+- Bayesian inference and prediction
+- Discrete-time stochastic processes
+- Stochastic differential equations (SDE)
+- Pathwise statistical analysis
+- Uncertainty-aware control methods
 
----
+Design goals:
 
-## Features
-
-- Symbolic differentiation  
-  - First-order, higher-order, and mixed partial derivatives
-- Expression tree (AST)–based representation
-- Built-in LaTeX parser (no third-party CAS dependency)
-- Expression simplification
-- Numerical derivative validation via finite differences
-- Supports nested and composite expressions
-- Simple matrix algebra operations and numerical calculations
+- Minimal
+- Composable
+- Explicit
+- No third-party dependencies
 
 ---
 
-## Example
+## Public API
+
+All examples below assume:
 
 ```python
-from minical.symdiff import parse_latex, diff, full_simplify
-
-expr = parse_latex(r"""
-\ln\left(\frac{\sin^2(x^2) + \sqrt{y}}
-{ \exp(x) + \log_{2}(x+y)}\right)
-+ \frac{\tan(\frac{x}{y})}{\sqrt[3]{\sin(x) + \cos(y)}}
-""")
-
-dx = full_simplify(diff(expr, "x"))
-dy = full_simplify(diff(expr, "y"))
-
-print("∂/∂x:", dx)
-print("∂/∂y:", dy)
+from minical.statistiques import *
 ```
 
-### Higher-Order and Mixed Derivatives
-MiniCal supports chained differentiation:
+The public API is defined by `statistiques/__init__.py`.
+
+---
+
+## 1. Core Random Variable System
+
+### Random Variables and Constants
+
 ```python
-# Third-order derivative with respect to x
-d3x = diff(expr, "x").diff("x").diff("x")
-
-# Mixed partial derivative ∂³ / (∂x² ∂y)
-d2x1y = diff(expr, "x").diff("x").diff("y")
+X = RV()
+c = Const(2.0)
 ```
-All derivatives are represented symbolically and can be further simplified or evaluated.
 
-### Numerical Validation
-Symbolic derivatives can be validated numerically using finite differences:
+Random variables support symbolic composition and delayed evaluation.
+
+---
+
+## 2. Probability Distributions
+
 ```python
-from minical.symdiff import validate
-
-point = {"x": 2.0, "y": 1.0}
-
-validate(expr, dx, "x", point)
-validate(expr, d3x, ["x", "x", "x"], point, tol=1e-3)
+X = Normal(0.0, 1.0)
+Y = Uniform(-1.0, 1.0)
 ```
-#### This is especially useful for:
-    Debugging differentiation rules
-    Verifying higher-order derivatives
-    Detecting simplification errors
 
-Note: numerical validation of high-order derivatives is sensitive to step size and floating-point error.
-Tolerance can be adjusted by the user.
+Distributions are random variables and can be combined algebraically.
 
-### matrix calculus
+---
+
+## 3. Algebra on Random Variables
+
 ```python
-from minical.matrix import Var, exp, sin, cos, pow, Inverse, eval_expr,ln
-
-A = Var("A", (2,2))
-B = Var("B", (2,2))
-env = { "A": [[1, 2],[3, 4]],"B": [[1, 2],[2, 4]] }
-expr1 = pow(A, 2)
-print("pow(A,2) =", eval_expr(expr1, env))
-expr2 = exp(A)
-print("exp(A) =", eval_expr(expr2, env))
-expr3 = sin(A)
-expr4 = cos(A)
-print("sin(A) =", eval_expr(expr3, env))
-print("cos(A) =", eval_expr(expr4, env))
-expr5 = Inverse(B)
-print("Inverse(B) =", eval_expr(expr5, env))
-expr6 = exp(A) @ Inverse(A)
-print("exp(A) * inv(A) =", eval_expr(expr6, env))
+Z = 2 * X + X**2 - 1
 ```
-### the output would be
+
+All operations construct symbolic expression trees.
+
+---
+
+## 4. Elementary Functions
+
 ```python
-pow(A,2) = [[7, 10], [15, 22]]
-exp(A) = [[51.96890355105711, 74.73648783689403], [112.10473175534102, 164.0736353063982]]
-sin(A) = [[-0.46559101168184286, -0.14843834244287693], [-0.2226575136643153, -0.688248525346158]]
-cos(A) = [[1.8554231650779978, -0.11087638101074773], [-0.166314571516122, 1.6891085935618741]]
-Inverse(B) = (B^-1)
-exp(A) * inv(A) = [[8.166924653226829, 14.600659632610096], [21.900989448915254, 30.067914102141927]]
+Y = exp(X) + abs(X)
+Z = sin(X) * cos(X)
 ```
 
-## Design Philosophy
-#### Minimalism over completeness
-Only core calculus primitives are implemented.
-#### No heavy dependencies
-MiniCal does not rely on SymPy or other CAS libraries.
-#### Explicit structure
-Expressions are represented as AST nodes, not strings.
-#### Extensibility first
-New operators, functions, or calculus modules can be added incrementally.
+Supported functions:
 
-## Project Structure
-```graphql
-minical/
-├── symdiff/
-│   ├── core.py        # Base expression classes
-│   ├── ops.py         # Binary and unary operators
-│   ├── funcs.py       # Elementary functions
-│   ├── diff.py        # Differentiation rules
-│   ├── simplify.py   # Simplification logic
-│   ├── latex.py      # LaTeX parser
-│   ├── validate.py   # Numerical derivative validation
-│   └── __init__.py
-├──matrix/
-│   ├── calculus.py
-│   ├── core.py
-│   ├── funcs.py
-│   ├── ops.py
-│   ├── simplify.py
-│   └── __init__.py
+- `sin`
+- `cos`
+- `exp`
+- `log`
+- `abs`
+
+---
+
+## 5. Monte Carlo Sampling
+
+```python
+samples = sample(Z, 100_000)
+mean_est = sum(samples) / len(samples)
 ```
+
+All numerical evaluation is performed via Monte Carlo sampling.
+
+---
+
+## 6. Statistical Operators
+
+### Expectation
+
+```python
+E(X)
+E(X + 1)
+```
+
+### Variance
+
+```python
+var(X)
+```
+
+### Covariance and Correlation
+
+```python
+cov(X, Y)
+corr(X, Y)
+```
+
+---
+
+## 7. Bayesian Inference
+
+### Posterior Predictive Distribution
+
+```python
+pp = posterior_predictive(prior=X, likelihood=Y)
+```
+
+### Credible Interval
+
+```python
+credible_interval(pp, level=0.95)
+```
+
+### Predictive Summary
+
+```python
+predictive_summary(pp)
+```
+
+---
+
+## 8. Discrete-Time Stochastic Processes
+
+### Random Walk
+
+```python
+rw = RandomWalk(sigma=1.0, x0=0.0)
+paths = rw.simulate(n_steps=100, n_samples=1000)
+```
+
+### AR(1) Process
+
+```python
+ar = AR1(phi=0.8, sigma=1.0, x0=0.0)
+paths = ar.simulate(n_steps=200, n_samples=500)
+```
+
+---
+
+## 9. Stochastic Differential Equations (SDE)
+
+```python
+def drift(x, t):
+    return 0.1 * x
+
+def diffusion(x, t):
+    return 0.2 * x
+
+sde = SDE(drift, diffusion, x0=1.0, dt=0.01)
+paths = sde.simulate(T=1.0, n_samples=5000)
+```
+
+Supported schemes include Euler–Maruyama and Milstein.
+
+---
+
+## 10. Pathwise Analysis
+
+Path-level statistics are available via the `analysis` namespace.
+
+```python
+from minical.statistiques import analysis
+```
+
+Examples:
+
+```python
+analysis.path_max(paths)
+analysis.path_min(paths)
+analysis.terminal_mean(paths)
+analysis.hitting_time(paths, threshold=2.0)
+```
+
+---
+
+## 11. Bayesian Methods Namespace
+
+```python
+from minical.statistiques import bayes
+```
+
+Contains Bayesian updating and inference utilities.
+
+---
+
+## 12. Control Namespace
+
+```python
+from minical.statistiques import control
+```
+
+Provides uncertainty-aware control methods for stochastic systems
+(e.g. SDE control, HJB, PMP).
+
+---
+
+## Design Principles
+
+- All uncertain quantities are modeled as random variables
+- Expression construction is separated from numerical evaluation
+- Sampling is the only numerical backend
+- Distributions, processes, and control methods are composable
+
+---
+
+## Current Scope
+
+Supported:
+
+- Scalar random variables
+- Monte Carlo inference
+- Discrete and continuous stochastic processes
+- Pathwise statistics
+- Bayesian prediction
+- Uncertainty-aware control frameworks
+
+Not supported:
+
+- Automatic differentiation
+- Closed-form symbolic solutions
+- High-dimensional vectorized backends
+
+---
+
+## Intended Use Cases
+
+- Probability and stochastic process education
+- Monte Carlo prototyping
+- Bayesian modeling
+- Stochastic system simulation
+- Integration with ODE and control modules
+
+---
+
+## Status
+
+This module is designed as a long-term, extensible core of the `minical` ecosystem.
+Public APIs defined here are intended to remain stable.
