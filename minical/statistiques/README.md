@@ -149,14 +149,14 @@ predictive_summary(pp)
 
 ```python
 rw = RandomWalk(sigma=1.0, x0=0.0)
-paths = rw.simulate(n_steps=100, n_paths=1000)
+paths = rw.simulate(n_steps=100, n_samples=1000)
 ```
 
 ### AR(1) Process
 
 ```python
 ar = AR1(phi=0.8, sigma=1.0, x0=0.0)
-paths = ar.simulate(n_steps=200, n_paths=500)
+paths = ar.simulate(n_steps=200, n_samples=500)
 ```
 
 ---
