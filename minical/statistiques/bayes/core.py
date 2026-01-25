@@ -1,0 +1,2 @@
+class Posterior:
+    pass
